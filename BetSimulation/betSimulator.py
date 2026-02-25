@@ -1,0 +1,1 @@
+# simulate bets; take in the odds and the quantity -> figure out some way of in the future figuring out pnl

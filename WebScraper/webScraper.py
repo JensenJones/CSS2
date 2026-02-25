@@ -1,0 +1,1 @@
+# Maybe there is a better approach to getting the betting info from companies so probably explore that first before just making a web-scraper
