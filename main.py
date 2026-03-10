@@ -1,5 +1,4 @@
-import liveOddsData.webScraper
-from liveOddsData.webScraper import fetch_odds
+from liveOddsData.OddsApiFetch import fetch_odds
 
 def main():
     fetch_odds("soccer")
