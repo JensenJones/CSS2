@@ -1,9 +1,9 @@
-import random
+import liveOddsData.webScraper
+from liveOddsData.webScraper import fetch_odds
 
 def main():
-    x = input()
+    fetch_odds("soccer")
 
-    print(random.random() < 0.5)
 
 if __name__ == "__main__":
     main()
