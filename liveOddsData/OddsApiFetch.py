@@ -1,21 +1,21 @@
 import os
 import requests
+from typing import Dict, Tuple
 
-# Example usage:
-# fetch_odds("table_tennis")
-# fetch_odds("basketball_ncaab")
+
 def fetch_odds(sport_key: str):
     """
-    Fetch upcoming matches odds for a given sport key.
+    Fetch upcoming matches odds for a given sport key
+    and print best odds per team across all bookmakers.
     """
-    API_KEY = os.getenv("ODDS_API_KEY")
-    if not API_KEY:
+    apiKey = os.getenv("ODDS_API_KEY")
+    if not apiKey:
         raise ValueError("Set your ODDS_API_KEY environment variable first!")
 
     url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds"
 
     params = {
-        "apiKey": API_KEY,
+        "apiKey": apiKey,
         "regions": "au",
         "markets": "h2h",
         "oddsFormat": "decimal"
@@ -32,13 +32,38 @@ def fetch_odds(sport_key: str):
         homeTeam = event["home_team"]
         awayTeam = event["away_team"]
 
-        for bookmaker in event["bookmakers"]:
-            for market in bookmaker["markets"]:
-                if market["key"] != "h2h":
+        # Track best odds: team -> (bestPrice, bookmakerName)
+        bestOdds: Dict[str, Tuple[float, str]] = {
+            homeTeam: (0.0, ""),
+            awayTeam: (0.0, "")
+        }
+
+        for bookmaker in event.get("bookmakers", []):
+            bookieName = bookmaker.get("title", "")
+
+            for market in bookmaker.get("markets", []):
+                if market.get("key") != "h2h":
                     continue
 
-                odds = {o["name"]: o["price"] for o in market["outcomes"]}
+                for outcome in market.get("outcomes", []):
+                    teamName = outcome["name"]
+                    price = outcome["price"]
 
-                print(f"{homeTeam} vs {awayTeam}")
-                print(f"{bookmaker['title']} Odds: {odds.get(homeTeam)} / {odds.get(awayTeam)}")
-                print()
+                    # Only care about the two teams (ignore draws if present)
+                    if teamName not in bestOdds:
+                        continue
+
+                    currentBest, _ = bestOdds[teamName]
+
+                    if price > currentBest:
+                        bestOdds[teamName] = (price, bookieName)
+
+        # Output
+        print(f"{homeTeam} vs {awayTeam}")
+
+        homePrice, homeBookie = bestOdds[homeTeam]
+        awayPrice, awayBookie = bestOdds[awayTeam]
+
+        print(f"Best {homeTeam}: {homePrice} @ {homeBookie}")
+        print(f"Best {awayTeam}: {awayPrice} @ {awayBookie}")
+        print()
